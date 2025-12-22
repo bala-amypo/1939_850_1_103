@@ -23,8 +23,10 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
             throw new IllegalArgumentException("End time must be after start time");
         }
         
+        // FIX: Added .orElse(null) because findByTemplateName... returns an Optional in your repo
         ShiftTemplate existing = shiftTemplateRepository.findByTemplateNameAndDepartment_Id(
-            template.getTemplateName(), template.getDepartment().getId());
+            template.getTemplateName(), template.getDepartment().getId()).orElse(null);
+            
         if (existing != null) {
             throw new IllegalArgumentException("Template name must be unique within department");
         }

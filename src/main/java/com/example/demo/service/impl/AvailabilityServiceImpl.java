@@ -19,8 +19,10 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     @Override
     public EmployeeAvailability create(EmployeeAvailability availability) {
+        // FIX: Added .orElse(null) to handle the Optional return type from the repository
         EmployeeAvailability existing = availabilityRepository.findByEmployee_IdAndAvailableDate(
-            availability.getEmployee().getId(), availability.getAvailableDate());
+            availability.getEmployee().getId(), availability.getAvailableDate()).orElse(null);
+            
         if (existing != null) {
             throw new IllegalArgumentException("Availability record already exists for this employee and date");
         }
