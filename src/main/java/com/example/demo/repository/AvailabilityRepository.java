@@ -10,13 +10,12 @@ import java.util.Optional;
 @Repository
 public interface AvailabilityRepository extends JpaRepository<EmployeeAvailability, Long> {
     
-    // Checks for existing records to prevent duplicates
-    // Standard naming: findBy + EntityName + PropertyName
-    Optional<EmployeeAvailability> findByEmployeeIdAndAvailableDate(Long employeeId, LocalDate availableDate);
+    // FIX 1: Add the underscore to match Service line 22
+    Optional<EmployeeAvailability> findByEmployee_IdAndAvailableDate(Long employeeId, LocalDate availableDate);
     
-    // Essential for the scheduling engine to find who is actually 'available' on a date
+    // FIX 2: Add the underscore to match Service line 33
+    List<EmployeeAvailability> findByEmployee_Id(Long employeeId);
+    
+    // Keep this for the scheduling logic
     List<EmployeeAvailability> findByAvailableDateAndAvailable(LocalDate availableDate, boolean available);
-    
-    // Finds all availability records for a specific employee
-    List<EmployeeAvailability> findByEmployeeId(Long employeeId);
 }
