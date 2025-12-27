@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.User;
-import com.example.demo.security.JwtTokenProvider;
+import com.example.demo.config.JwtUtil; // Matches MasterTestNGSuiteTest import
 import com.example.demo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,18 +16,20 @@ import java.util.Map;
 @Tag(name = "Authentication Endpoints")
 public class AuthController {
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtUtil jwtUtil; // Renamed for test compatibility
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserService userService, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder) {
+    // Strict Requirement: Constructor Injection
+    public AuthController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
         this.userService = userService;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
     @Operation(summary = "Register new user")
     public ResponseEntity<User> register(@RequestBody User user) {
+        // Business logic must reside in service (userService.register handles "exists" check)
         return ResponseEntity.ok(userService.register(user));
     }
 
@@ -40,8 +42,9 @@ public class AuthController {
             
             User user = userService.findByEmail(email);
             
-            if (passwordEncoder.matches(password, user.getPassword())) {
-                String token = jwtTokenProvider.generateToken(user);
+            // Validate password and generate token using renamed utility
+            if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+                String token = jwtUtil.generateToken(user.getEmail()); // Method name should match your JwtUtil
                 Map<String, String> response = new HashMap<>();
                 response.put("token", token);
                 return ResponseEntity.ok(response);
@@ -49,6 +52,7 @@ public class AuthController {
                 return ResponseEntity.status(401).body("Invalid credentials");
             }
         } catch (Exception e) {
+            // SRS requirement: Don't expose internal details
             return ResponseEntity.status(401).body("Invalid credentials");
         }
     }
