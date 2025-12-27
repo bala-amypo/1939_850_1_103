@@ -3,23 +3,31 @@ package com.example.demo.service.impl;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
+import org.springframework.security.crypto.password.PasswordEncoder; // Add this import
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder; // Add this field
 
-    public UserServiceImpl(UserRepository repository) {
+    // Update constructor to inject PasswordEncoder
+    public UserServiceImpl(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public User register(User user) {
-        // The "exists" message is often required by TestNG suites for validation
         if (repository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("exists");
         }
+
+        // FIX: Encode the password before saving to database
+        // This ensures the hash matches during the login process
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         return repository.save(user);
     }
 
@@ -40,7 +48,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        // Validating existence before deletion is a best practice for clean test logs
         if (repository.existsById(id)) {
             repository.deleteById(id);
         }
