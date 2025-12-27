@@ -1,59 +1,70 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.User;
-import com.example.demo.config.JwtUtil; // Matches MasterTestNGSuiteTest import
-import com.example.demo.service.UserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.example.demo.config.JwtUtil;
+import com.example.demo.dto.AuthRequest;
+import com.example.demo.dto.AuthResponse;
+import com.example.demo.model.Employee;
+import com.example.demo.repository.EmployeeRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Authentication Endpoints")
 public class AuthController {
-    private final UserService userService;
-    private final JwtUtil jwtUtil; // Renamed for test compatibility
-    private final PasswordEncoder passwordEncoder;
 
-    // Strict Requirement: Constructor Injection
-    public AuthController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
-        this.userService = userService;
-        this.jwtUtil = jwtUtil;
+    private final AuthenticationManager authenticationManager;
+    private final EmployeeRepository employeeRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
+    public AuthController(AuthenticationManager authenticationManager, 
+                          EmployeeRepository employeeRepository, 
+                          PasswordEncoder passwordEncoder, 
+                          JwtUtil jwtUtil) {
+        this.authenticationManager = authenticationManager;
+        this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Register new user")
-    public ResponseEntity<User> register(@RequestBody User user) {
-        // Business logic must reside in service (userService.register handles "exists" check)
-        return ResponseEntity.ok(userService.register(user));
+    public ResponseEntity<?> register(@RequestBody Employee employee) {
+        // Hash password before saving
+        employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+        if (employee.getRole() == null) employee.setRole("STAFF");
+        
+        Employee savedEmployee = employeeRepository.save(employee);
+        return ResponseEntity.ok(savedEmployee);
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login user")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        try {
-            String email = request.get("email");
-            String password = request.get("password");
-            
-            User user = userService.findByEmail(email);
-            
-            // Validate password and generate token using renamed utility
-            if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-                String token = jwtUtil.generateToken(user.getEmail()); // Method name should match your JwtUtil
-                Map<String, String> response = new HashMap<>();
-                response.put("token", token);
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(401).body("Invalid credentials");
-            }
-        } catch (Exception e) {
-            // SRS requirement: Don't expose internal details
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest) {
+        // 1. Validate credentials (this throws 401 if wrong)
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                authRequest.getEmail(), 
+                authRequest.getPassword()
+            )
+        );
+
+        // 2. Fetch user details for the response
+        Employee employee = employeeRepository.findByEmail(authRequest.getEmail())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 3. Generate Token
+        String token = jwtUtil.generateToken(employee.getEmail());
+
+        // 4. Return the DTO you created
+        return ResponseEntity.ok(new AuthResponse(
+            token,
+            employee.getId(),
+            employee.getEmail(),
+            employee.getRole()
+        ));
     }
 }
