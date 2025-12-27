@@ -6,6 +6,9 @@ import java.util.List;
 
 public interface AvailabilityService {
     
+    // FIX: Added 'create' to match the method in AvailabilityServiceImpl
+    EmployeeAvailability create(EmployeeAvailability availability);
+    
     // Create
     EmployeeAvailability saveAvailability(EmployeeAvailability availability);
     
@@ -14,9 +17,9 @@ public interface AvailabilityService {
     
     List<EmployeeAvailability> getByDate(LocalDate date);
     
-    // Update - FIX: Required for the updateAvailability logic in your Impl
+    // Update
     EmployeeAvailability update(Long id, EmployeeAvailability availability);
     
-    // Delete - FIX: Required for the deleteAvailability logic in your Impl
+    // Delete
     void delete(Long id);
 }
