@@ -2,8 +2,8 @@ package com.example.demo.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,11 +45,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            // Updated CORS configuration to use a proper source bean
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Explicitly allow Swagger and Auth endpoints
+                // 1. Allow Auth and Swagger Documentation
                 .requestMatchers(
                     "/auth/**", 
                     "/api/auth/**", 
@@ -57,7 +56,12 @@ public class SecurityConfig {
                     "/swagger-ui/**", 
                     "/swagger-ui.html"
                 ).permitAll()
-                // All other /api/ endpoints require a valid JWT
+                
+                // 2. FIX: Permit Department Creation to solve the "Chicken and Egg" problem
+                // This allows you to create a department before registering a user
+                .requestMatchers(HttpMethod.POST, "/api/departments").permitAll()
+                
+                // 3. Protect all other core API endpoints
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
@@ -69,12 +73,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow the origin of your frontend/Swagger environment
         configuration.setAllowedOriginPatterns(List.of("*")); 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // Cache pre-flight response for 1 hour
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
