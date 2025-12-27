@@ -2,6 +2,7 @@ package com.example.demo.service.impl;
 
 import com.example.demo.model.ShiftTemplate;
 import com.example.demo.repository.ShiftTemplateRepository;
+import com.example.demo.repository.DepartmentRepository; // Required dependency
 import com.example.demo.service.ShiftTemplateService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,10 +12,13 @@ import java.util.List;
 @Transactional
 public class ShiftTemplateServiceImpl implements ShiftTemplateService {
     private final ShiftTemplateRepository shiftTemplateRepository;
+    private final DepartmentRepository departmentRepository; // Added for Test compatibility
 
-    // Strict requirement: Constructor Injection (No @Autowired)
-    public ShiftTemplateServiceImpl(ShiftTemplateRepository shiftTemplateRepository) {
+    // FIX: Updated constructor to accept 2 arguments as required by MasterTestNGSuiteTest:43
+    public ShiftTemplateServiceImpl(ShiftTemplateRepository shiftTemplateRepository, 
+                                    DepartmentRepository departmentRepository) {
         this.shiftTemplateRepository = shiftTemplateRepository;
+        this.departmentRepository = departmentRepository;
     }
 
     @Override
@@ -26,7 +30,6 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         }
         
         // Uniqueness check for template name within a department
-        // Test suite requirement: Message often expects "unique" or "exists"
         shiftTemplateRepository.findByTemplateNameAndDepartment_Id(
             template.getTemplateName(), 
             template.getDepartment().getId()
@@ -37,15 +40,19 @@ public class ShiftTemplateServiceImpl implements ShiftTemplateService {
         return shiftTemplateRepository.save(template);
     }
 
+    // FIX: Added 'getByDepartment' because MasterTestNGSuiteTest:311 cannot find this symbol
+    @Override
+    public List<ShiftTemplate> getByDepartment(Long departmentId) {
+        return findByDepartment(departmentId);
+    }
+
     @Override
     public List<ShiftTemplate> findByDepartment(Long departmentId) {
-        // Test priority 45/46 uses the method name findByDepartment
         return shiftTemplateRepository.findByDepartment_Id(departmentId);
     }
 
     @Override
     public void delete(Long id) {
-        // Standard delete logic often required by CRUD tests
         ShiftTemplate st = shiftTemplateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Template not found"));
         shiftTemplateRepository.delete(st);

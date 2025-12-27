@@ -2,6 +2,7 @@ package com.example.demo.service.impl;
 
 import com.example.demo.model.EmployeeAvailability;
 import com.example.demo.repository.AvailabilityRepository;
+import com.example.demo.repository.EmployeeRepository; // Required by Test Suite
 import com.example.demo.service.AvailabilityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,9 +13,18 @@ import java.util.List;
 @Transactional
 public class AvailabilityServiceImpl implements AvailabilityService {
     private final AvailabilityRepository availabilityRepository;
+    private final EmployeeRepository employeeRepository; // Added for Test compatibility
 
-    public AvailabilityServiceImpl(AvailabilityRepository availabilityRepository) {
+    // FIX: Updated constructor to accept both repositories as required by MasterTestNGSuiteTest:44
+    public AvailabilityServiceImpl(AvailabilityRepository availabilityRepository, EmployeeRepository employeeRepository) {
         this.availabilityRepository = availabilityRepository;
+        this.employeeRepository = employeeRepository;
+    }
+
+    // FIX: Added 'create' method because MasterTestNGSuiteTest:247 cannot find this symbol
+    @Override
+    public EmployeeAvailability create(EmployeeAvailability availability) {
+        return saveAvailability(availability);
     }
 
     @Override

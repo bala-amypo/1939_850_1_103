@@ -15,13 +15,22 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final AvailabilityRepository avRepo;
     private final DepartmentRepository deptRepo;
     private final GeneratedShiftScheduleRepository schRepo;
+    private final EmployeeRepository empRepo; // Added to satisfy Test Suite requirement
 
-    // Requirement: Constructor Injection (Manual instantiation in MasterTestNGSuiteTest)
-    public ScheduleServiceImpl(ShiftTemplateRepository st, AvailabilityRepository av, 
-                               DepartmentRepository d, GeneratedShiftScheduleRepository s) {
+    /**
+     * FIX: Updated constructor to accept 5 arguments as required by MasterTestNGSuiteTest:45.
+     * The test suite explicitly passes: 
+     * (ShiftTemplateRepo, AvailabilityRepo, DepartmentRepo, EmployeeRepo, GeneratedShiftScheduleRepo)
+     */
+    public ScheduleServiceImpl(ShiftTemplateRepository st, 
+                               AvailabilityRepository av, 
+                               DepartmentRepository d, 
+                               EmployeeRepository e, 
+                               GeneratedShiftScheduleRepository s) {
         this.stRepo = st; 
         this.avRepo = av; 
         this.deptRepo = d; 
+        this.empRepo = e;
         this.schRepo = s;
     }
 
@@ -65,7 +74,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public List<GeneratedShiftSchedule> getByDate(LocalDate date) {
-        // Test priority 62 (testScheduleDateParse) relies on this returning a list (even if empty)
+        // Test priority 62 (testScheduleDateParse) relies on this returning a list
         return schRepo.findByShiftDate(date);
     }
 }
