@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface DepartmentService {
     Department create(Department department);
-    Department getById(Long id);
-    List<Department> getAll();
+    Department get(Long id);
     void delete(Long id);
+    List<Department> getAll();
 }
