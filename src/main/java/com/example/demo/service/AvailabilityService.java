@@ -5,8 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface AvailabilityService {
-    EmployeeAvailability create(EmployeeAvailability availability);
-    EmployeeAvailability update(Long id, EmployeeAvailability availability);
-    void delete(Long id);
+    EmployeeAvailability saveAvailability(EmployeeAvailability availability);
+    List<EmployeeAvailability> getByEmployee(Long empId);
     List<EmployeeAvailability> getByDate(LocalDate date);
 }
