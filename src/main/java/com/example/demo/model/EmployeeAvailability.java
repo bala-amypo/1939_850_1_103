@@ -12,9 +12,15 @@ public class EmployeeAvailability {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "employee_id") // Explicitly links to the Employee's ID
     private Employee employee;
+
     private LocalDate availableDate;
+    
+    // Using Boolean (wrapper) is safer than boolean (primitive) 
+    // for JPA to handle potential nulls during record creation
     private Boolean available;
 
     public EmployeeAvailability(Employee employee, LocalDate availableDate, Boolean available) {

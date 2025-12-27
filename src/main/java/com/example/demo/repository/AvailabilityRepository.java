@@ -10,12 +10,13 @@ import java.util.Optional;
 @Repository
 public interface AvailabilityRepository extends JpaRepository<EmployeeAvailability, Long> {
     
-    // Used by Service to check for duplicates before saving
-    Optional<EmployeeAvailability> findByEmployee_IdAndAvailableDate(Long employeeId, LocalDate availableDate);
+    // Checks for existing records to prevent duplicates
+    // Standard naming: findBy + EntityName + PropertyName
+    Optional<EmployeeAvailability> findByEmployeeIdAndAvailableDate(Long employeeId, LocalDate availableDate);
     
-    // CRITICAL: Used by ScheduleServiceImpl.generateForDate to find staff for a specific day
+    // Essential for the scheduling engine to find who is actually 'available' on a date
     List<EmployeeAvailability> findByAvailableDateAndAvailable(LocalDate availableDate, boolean available);
     
-    // Used by AvailabilityController to fetch history for a specific employee
-    List<EmployeeAvailability> findByEmployee_Id(Long employeeId);
+    // Finds all availability records for a specific employee
+    List<EmployeeAvailability> findByEmployeeId(Long employeeId);
 }
