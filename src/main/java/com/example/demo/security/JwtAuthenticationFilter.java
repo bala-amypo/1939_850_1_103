@@ -1,5 +1,6 @@
 package com.example.demo.security;
 
+import com.example.demo.config.JwtUtil; // Aligning with the class name used in previous steps
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,29 +12,33 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
-import java.util.ArrayList;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final JwtTokenProvider jwtTokenProvider;
+    // Changed to JwtUtil to match the MasterTestNGSuiteTest bean expectations
+    private final JwtUtil jwtUtil; 
     private final CustomUserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService userDetailsService) {
-        this.jwtTokenProvider = jwtTokenProvider;
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+        this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        
         String token = getTokenFromRequest(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            String email = jwtTokenProvider.getEmailFromToken(token);
+        if (token != null && jwtUtil.validateToken(token)) {
+            String email = jwtUtil.getEmailFromToken(token);
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
+            // FIX: Pass userDetails.getAuthorities() instead of an empty list
+            // This ensures ROLE_ADMIN or ROLE_EMPLOYEE is respected by @PreAuthorize
             UsernamePasswordAuthenticationToken authentication = 
-                new UsernamePasswordAuthenticationToken(userDetails, null, new ArrayList<>());
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
