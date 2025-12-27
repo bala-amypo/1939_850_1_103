@@ -10,12 +10,10 @@ import java.util.Optional;
 @Repository
 public interface AvailabilityRepository extends JpaRepository<EmployeeAvailability, Long> {
     
-    // FIX 1: Add the underscore to match Service line 22
-    Optional<EmployeeAvailability> findByEmployee_IdAndAvailableDate(Long employeeId, LocalDate availableDate);
+    Optional<EmployeeAvailability> findByEmployee_IdAndAvailableDate(Long employeeId, LocalDate date);
     
-    // FIX 2: Add the underscore to match Service line 33
+    List<EmployeeAvailability> findByAvailableDateAndAvailable(LocalDate date, Boolean available);
+    
     List<EmployeeAvailability> findByEmployee_Id(Long employeeId);
-    
-    // Keep this for the scheduling logic
-    List<EmployeeAvailability> findByAvailableDateAndAvailable(LocalDate availableDate, boolean available);
 }
+
