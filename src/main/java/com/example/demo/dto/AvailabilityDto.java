@@ -1,27 +1,37 @@
 package com.example.demo.dto;
 
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public class AvailabilityDto {
-    
-    @NotNull(message = "Availability status is required")
+
+    private Long employeeId;
+    private LocalDate availableDate;
     private Boolean available;
 
-    @NotNull(message = "Available date is required")
-    private LocalDate availableDate;
+    public AvailabilityDto() {
+    }
 
-    // Default constructor for JSON deserialization
-    public AvailabilityDto() {}
+    public Long getEmployeeId() {
+        return employeeId;
+    }
 
-    public AvailabilityDto(Boolean available, LocalDate availableDate) {
-        this.available = available;
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public LocalDate getAvailableDate() {
+        return availableDate;
+    }
+
+    public void setAvailableDate(LocalDate availableDate) {
         this.availableDate = availableDate;
     }
 
-    public Boolean getAvailable() { return available; }
-    public void setAvailable(Boolean available) { this.available = available; }
+    public Boolean getAvailable() {
+        return available;
+    }
 
-    public LocalDate getAvailableDate() { return availableDate; }
-    public void setAvailableDate(LocalDate availableDate) { this.availableDate = availableDate; }
+    public void setAvailable(Boolean available) {
+        this.available = available;
+    }
 }
