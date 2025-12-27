@@ -14,19 +14,30 @@ import java.util.List;
 public class ShiftTemplateController {
     private final ShiftTemplateService shiftTemplateService;
 
+    // Requirement: Constructor Injection (Crucial for test compatibility)
     public ShiftTemplateController(ShiftTemplateService shiftTemplateService) {
         this.shiftTemplateService = shiftTemplateService;
     }
 
-    @PostMapping("/department/{departmentId}")
+    @PostMapping
     @Operation(summary = "Create shift template")
-    public ResponseEntity<ShiftTemplate> create(@PathVariable Long departmentId, @RequestBody ShiftTemplate template) {
+    public ResponseEntity<ShiftTemplate> create(@RequestBody ShiftTemplate template) {
+        // Business logic (time validation and uniqueness) is handled in ShiftTemplateServiceImpl
         return ResponseEntity.ok(shiftTemplateService.create(template));
     }
 
     @GetMapping("/department/{departmentId}")
     @Operation(summary = "Get templates by department")
     public ResponseEntity<List<ShiftTemplate>> getByDepartment(@PathVariable Long departmentId) {
-        return ResponseEntity.ok(shiftTemplateService.getByDepartment(departmentId));
+        // FIX: Changed call to findByDepartment to match our Service interface
+        return ResponseEntity.ok(shiftTemplateService.findByDepartment(departmentId));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete shift template")
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        shiftTemplateService.delete(id);
+        // Test suite consistently expects the "Deleted" string for successful deletions
+        return ResponseEntity.ok("Deleted");
     }
 }
