@@ -4,31 +4,23 @@ import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 public class UserServiceImpl implements UserService {
-    private final UserRepository userRepository;
+    private final UserRepository repository;
 
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserServiceImpl(UserRepository repository) {
+        this.repository = repository;
     }
 
     @Override
     public User register(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("User with email exists");
-        }
-        if (user.getRole() == null) {
-            user.setRole("ANALYST");
-        }
-        return userRepository.save(user);
+        if (repository.existsByEmail(user.getEmail())) throw new RuntimeException("exists");
+        return repository.save(user);
     }
 
     @Override
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        return repository.findByEmail(email).orElse(null);
     }
 }

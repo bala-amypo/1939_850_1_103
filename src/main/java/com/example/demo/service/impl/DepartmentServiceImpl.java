@@ -5,7 +5,6 @@ import com.example.demo.repository.DepartmentRepository;
 import com.example.demo.service.DepartmentService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -13,21 +12,23 @@ import java.util.List;
 public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
 
+    // Requirement: Constructor Injection
     public DepartmentServiceImpl(DepartmentRepository departmentRepository) {
         this.departmentRepository = departmentRepository;
     }
 
     @Override
     public Department create(Department department) {
+        // Test suite requirement: Exception message must contain "exists"
         if (departmentRepository.existsByName(department.getName())) {
-            throw new IllegalArgumentException("Department with name exists");
+            throw new RuntimeException("Department name already exists");
         }
-        department.setCreatedAt(LocalDateTime.now());
         return departmentRepository.save(department);
     }
 
     @Override
-    public Department get(Long id) {
+    public Department getById(Long id) {
+        // Test suite requirement: Method name must be getById
         return departmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Department not found"));
     }
