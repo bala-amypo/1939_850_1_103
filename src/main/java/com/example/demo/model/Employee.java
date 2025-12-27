@@ -6,7 +6,7 @@ import lombok.*;
 @Entity
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor // This generates the (id, fullName, email, department, role, skills, maxWeeklyHours) constructor
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,16 +15,15 @@ public class Employee {
     private String fullName;
     private String email;
     
-    // The test suite expects a Department entity relationship
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department; 
     
-    private String role; // Default to "STAFF"
-    private String skills; // e.g., "JAVA,SQL"
+    private String role; 
+    private String skills; 
     private int maxWeeklyHours;
 
-    // Updated constructor to include Department as required by the Test Suite
+    // KEEP THIS ONE: Used for creating new employees where the ID is not yet known
     public Employee(String fullName, String email, Department department, String role, String skills, int maxWeeklyHours) {
         this.fullName = fullName;
         this.email = email;
@@ -33,4 +32,6 @@ public class Employee {
         this.skills = skills;
         this.maxWeeklyHours = maxWeeklyHours;
     }
+    
+    // REMOVED: The manual constructor with 'id' as it conflicted with @AllArgsConstructor
 }
