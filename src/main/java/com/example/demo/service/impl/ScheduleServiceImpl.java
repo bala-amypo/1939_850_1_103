@@ -4,77 +4,99 @@ import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.ScheduleService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
-@Transactional
 public class ScheduleServiceImpl implements ScheduleService {
-    private final ShiftTemplateRepository stRepo;
-    private final AvailabilityRepository avRepo;
-    private final DepartmentRepository deptRepo;
-    private final GeneratedShiftScheduleRepository schRepo;
-    private final EmployeeRepository empRepo; // Added to satisfy Test Suite requirement
 
-    /**
-     * FIX: Updated constructor to accept 5 arguments as required by MasterTestNGSuiteTest:45.
-     * The test suite explicitly passes: 
-     * (ShiftTemplateRepo, AvailabilityRepo, DepartmentRepo, EmployeeRepo, GeneratedShiftScheduleRepo)
-     */
-    public ScheduleServiceImpl(ShiftTemplateRepository st, 
-                               AvailabilityRepository av, 
-                               DepartmentRepository d, 
-                               EmployeeRepository e, 
-                               GeneratedShiftScheduleRepository s) {
-        this.stRepo = st; 
-        this.avRepo = av; 
-        this.deptRepo = d; 
-        this.empRepo = e;
-        this.schRepo = s;
+    private final ShiftTemplateRepository shiftTemplateRepository;
+    private final AvailabilityRepository availabilityRepository;
+    private final EmployeeRepository employeeRepository;
+    private final GeneratedShiftScheduleRepository scheduleRepository;
+    private final DepartmentRepository departmentRepository;
+
+    public ScheduleServiceImpl(ShiftTemplateRepository shiftTemplateRepository,
+                              AvailabilityRepository availabilityRepository,
+                              EmployeeRepository employeeRepository,
+                              GeneratedShiftScheduleRepository scheduleRepository,
+                              DepartmentRepository departmentRepository) {
+        this.shiftTemplateRepository = shiftTemplateRepository;
+        this.availabilityRepository = availabilityRepository;
+        this.employeeRepository = employeeRepository;
+        this.scheduleRepository = scheduleRepository;
+        this.departmentRepository = departmentRepository;
     }
 
     @Override
     public List<GeneratedShiftSchedule> generateForDate(LocalDate date) {
-        // Clear existing schedules for the date to prevent duplicates if tests re-run
-        List<GeneratedShiftSchedule> existing = schRepo.findByShiftDate(date);
-        schRepo.deleteAll(existing);
-
-        List<GeneratedShiftSchedule> results = new ArrayList<>();
-        List<Department> depts = deptRepo.findAll();
+        List<GeneratedShiftSchedule> schedules = new ArrayList<>();
         
-        // Fetch only employees explicitly marked as 'Available' for this date
-        List<EmployeeAvailability> availableStaff = avRepo.findByAvailableDateAndAvailable(date, true);
-
-        for (Department dept : depts) {
-            // Find templates specific to this department
-            List<ShiftTemplate> templates = stRepo.findByDepartment_Id(dept.getId());
+        List<Department> departments = departmentRepository.findAll();
+        List<EmployeeAvailability> availabilities = availabilityRepository.findByAvailableDateAndAvailable(date, true);
+        
+        for (Department department : departments) {
+            List<ShiftTemplate> templates = shiftTemplateRepository.findByDepartment_Id(department.getId());
             
-            for (ShiftTemplate st : templates) {
-                for (EmployeeAvailability av : availableStaff) {
-                    Employee emp = av.getEmployee();
+            for (ShiftTemplate template : templates) {
+                for (EmployeeAvailability availability : availabilities) {
+                    Employee employee = availability.getEmployee();
                     
-                    // Skill matching: Employee must possess the skills required by the template
-                    if (emp.getSkills() != null && st.getRequiredSkills() != null && 
-                        emp.getSkills().contains(st.getRequiredSkills())) {
+                    if (matchesSkills(employee.getSkills(), template.getRequiredSkills())) {
+                        GeneratedShiftSchedule schedule = new GeneratedShiftSchedule();
+                        schedule.setShiftDate(date);
+                        schedule.setStartTime(template.getStartTime());
+                        schedule.setEndTime(template.getEndTime());
+                        schedule.setEmployee(employee);
+                        schedule.setDepartment(department);
+                        schedule.setShiftTemplate(template);
                         
-                        GeneratedShiftSchedule sch = new GeneratedShiftSchedule();
-                        sch.setEmployee(emp);
-                        sch.setDepartment(dept);
-                        sch.setShiftDate(date);
-                        
-                        // Persistent save as required by SRS referential integrity
-                        results.add(schRepo.save(sch));
+                        schedules.add(scheduleRepository.save(schedule));
+                        break;
                     }
                 }
             }
         }
-        return results;
+        
+        return schedules;
     }
 
     @Override
     public List<GeneratedShiftSchedule> getByDate(LocalDate date) {
-        // Test priority 62 (testScheduleDateParse) relies on this returning a list
-        return schRepo.findByShiftDate(date);
+        return scheduleRepository.findByShiftDate(date);
+    }
+
+    private boolean matchesSkills(String employeeSkills, String requiredSkills) {
+        if (employeeSkills == null || requiredSkills == null) {
+            return false;
+        }
+        
+        List<String> empSkillsList = Arrays.asList(employeeSkills.split(","));
+        List<String> reqSkillsList = Arrays.asList(requiredSkills.split(","));
+        
+        for (String reqSkill : reqSkillsList) {
+            boolean found = false;
+            String reqSkillTrimmed = reqSkill.trim().toUpperCase();
+            
+            for (String empSkill : empSkillsList) {
+                if (empSkill.trim().toUpperCase().equals(reqSkillTrimmed)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }
+
+
+
+
+
