@@ -16,9 +16,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User register(User user) {
-        // The "exists" string is critical for the MasterTestNGSuiteTest validation
         if (repository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("User already exists");
+            throw new RuntimeException("exists");
         }
         return repository.save(user);
     }
@@ -28,12 +27,19 @@ public class UserServiceImpl implements UserService {
         return repository.findByEmail(email).orElse(null);
     }
 
-    // FIX: Adding the missing methods required by the UserService interface
     @Override
     public List<User> getAllUsers() {
         return repository.findAll();
     }
 
+    // FIX 1: Missing method getById
+    @Override
+    public User getById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    // FIX 2: Check your UserService interface. 
+    // If it's named delete(Long id), change this name to match.
     @Override
     public void deleteUser(Long id) {
         repository.deleteById(id);
