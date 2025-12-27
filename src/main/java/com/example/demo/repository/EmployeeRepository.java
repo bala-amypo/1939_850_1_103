@@ -15,6 +15,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     // Used by EmployeeService to throw the "exists" exception required by tests
     boolean existsByEmail(String email);
 
-    // Useful for departmental reporting or filtering in the UI/Tests
-    List<Employee> findByDepartment_Id(Long departmentId);
+    // FIX: Changed from 'department' to 'role' to match your Employee model fields
+    // This prevents the "No property department found" crash.
+    List<Employee> findByRole(String role);
 }
