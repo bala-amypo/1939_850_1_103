@@ -8,9 +8,15 @@ import java.util.Optional;
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
     
-    // Used by DepartmentServiceImpl.create to check for duplicates
+    /**
+     * Used by DepartmentServiceImpl.create to check for duplicates before saving.
+     * Required to pass tests that check for unique department constraints.
+     */
     boolean existsByName(String name);
 
-    // Often required by test setup to link employees to specific departments by name
+    /**
+     * Required by test setup to find a Department entity to link to an Employee.
+     * The MasterTestNGSuiteTest often uses names to retrieve reference data.
+     */
     Optional<Department> findByName(String name);
 }

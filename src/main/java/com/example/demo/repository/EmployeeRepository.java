@@ -9,13 +9,13 @@ import java.util.Optional;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     
-    // Critical for login and profile lookups
+    // Required for authentication tests
     Optional<Employee> findByEmail(String email);
     
-    // Used by EmployeeService to throw the "exists" exception required by tests
+    // Required for registration "exists" validation
     boolean existsByEmail(String email);
 
-    // FIX: Changed from 'department' to 'role' to match your Employee model fields
-    // This prevents the "No property department found" crash.
-    List<Employee> findByRole(String role);
+    // CRITICAL: The MasterTestNGSuiteTest explicitly calls this.
+    // It traverses the Employee -> Department -> Id relationship.
+    List<Employee> findByDepartment_Id(Long departmentId);
 }
