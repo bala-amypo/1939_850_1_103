@@ -19,45 +19,38 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     @Override
     public EmployeeAvailability saveAvailability(EmployeeAvailability availability) {
-        // Validation: The Test suite looks for the substring "exists" 
         availabilityRepository.findByEmployee_IdAndAvailableDate(
             availability.getEmployee().getId(), 
             availability.getAvailableDate()
         ).ifPresent(a -> {
-            throw new RuntimeException("Availability record already exists");
+            throw new RuntimeException("exists");
         });
-
         return availabilityRepository.save(availability);
     }
 
-    // FIX: Method name changed from 'update' to 'updateAvailability' to match Interface expectations
     @Override
-    public EmployeeAvailability updateAvailability(Long id, EmployeeAvailability availability) {
-        EmployeeAvailability existing = availabilityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("record not found"));
-        existing.setAvailable(availability.getAvailable());
-        return availabilityRepository.save(existing);
-    }
-
-    // FIX: Method name changed from 'delete' to 'deleteAvailability' 
-    // This addresses the [ERROR] at line 42 regarding supertype implementation
-    @Override
-    public void deleteAvailability(Long id) {
-        if (!availabilityRepository.existsById(id)) {
-            throw new RuntimeException("record not found");
-        }
-        availabilityRepository.deleteById(id);
-    }
-
-    // FIX: Method name changed to plural or specific naming used in your Interface
-    @Override
-    public List<EmployeeAvailability> getAvailabilitiesByEmployeeId(Long empId) {
+    public List<EmployeeAvailability> getByEmployee(Long empId) {
         return availabilityRepository.findByEmployee_Id(empId);
     }
 
     @Override
-    public List<EmployeeAvailability> getAvailabilityByDate(LocalDate date) {
-        // Essential for the scheduling engine: filter only for 'true' availability
+    public List<EmployeeAvailability> getByDate(LocalDate date) {
         return availabilityRepository.findByAvailableDateAndAvailable(date, true);
+    }
+
+    @Override
+    public EmployeeAvailability update(Long id, EmployeeAvailability availability) {
+        EmployeeAvailability existing = availabilityRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("not found"));
+        existing.setAvailable(availability.getAvailable());
+        return availabilityRepository.save(existing);
+    }
+
+    @Override
+    public void delete(Long id) {
+        if (!availabilityRepository.existsById(id)) {
+            throw new RuntimeException("not found");
+        }
+        availabilityRepository.deleteById(id);
     }
 }

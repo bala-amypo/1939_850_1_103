@@ -16,9 +16,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User register(User user) {
-        if (repository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("exists");
-        }
+        if (repository.existsByEmail(user.getEmail())) throw new RuntimeException("exists");
         return repository.save(user);
     }
 
@@ -32,14 +30,11 @@ public class UserServiceImpl implements UserService {
         return repository.findAll();
     }
 
-    // FIX 1: Missing method getById
     @Override
     public User getById(Long id) {
         return repository.findById(id).orElse(null);
     }
 
-    // FIX 2: Check your UserService interface. 
-    // If it's named delete(Long id), change this name to match.
     @Override
     public void deleteUser(Long id) {
         repository.deleteById(id);
