@@ -1,6 +1,9 @@
 package com.example.demo.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,9 +15,21 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-                // You need to change the port as per your server
+                .info(new Info()
+                        .title("Credit Card Reward Maximizer API")
+                        .version("1.0")
+                        .description("API for managing credit cards and reward optimization"))
                 .servers(List.of(
-                        new Server().url("https://9240.408procr.amypo.ai/")
-                ));
-        }
+                        new Server().url("https://9253.408procr.amypo.ai/"),
+                        new Server().url("http://localhost:9001")
+                ))
+                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes("Bearer Authentication",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("JWT token for authentication")));
+    }
 }
